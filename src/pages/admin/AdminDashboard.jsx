@@ -94,7 +94,7 @@ export default function AdminDashboard() {
     // Activity is loaded separately so an activity API failure
     // does not prevent the ticket dashboard from working.
     try {
-      const activityResponse = await api.get("/activity");
+      const activityResponse = await api.get("/activities");
       setActivity(getArray(activityResponse.data, "activity"));
     } catch (err) {
       setActivity([]);

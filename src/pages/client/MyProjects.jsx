@@ -3,8 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, LoaderCircle, RefreshCw } from "lucide-react";
 
-import { tickets } from "../../data/mockData";
 import { getProjects } from "../../api/projectApi";
+import { getTickets } from "../../api/ticketApi";
 import { PageHeader } from "../../components/ClientComponent/UI";
 
 import ProjectStats from "../../components/ClientComponent/projects/ProjectStats";
@@ -18,6 +18,7 @@ export default function MyProjects() {
   const initialProject = searchParams.get("project") || "";
 
   const [projects, setProjects] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
   const [loading, setLoading] = useState(true);
@@ -43,7 +44,23 @@ export default function MyProjects() {
         throw new Error("Invalid projects response from server.");
       }
 
-      setProjects(projectData);
+      setProjects(projectData.map((project) => {
+        const name = project.name || "Project";
+        return {
+          ...project,
+          id: String(project._id || project.id),
+          name,
+          status: project.status || "Planning",
+          description: project.description || "",
+          color: project.color || "#C2410C",
+          initials: name
+            .split(/\s+/)
+            .slice(0, 2)
+            .map((part) => part[0]?.toUpperCase())
+            .join(""),
+          deliveryDate: project.deadline || project.deliveryDate || "",
+        };
+      }));
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -57,6 +74,16 @@ export default function MyProjects() {
 
   useEffect(() => {
     fetchProjects();
+    getTickets()
+      .then((response) => {
+        const ticketData = Array.isArray(response?.tickets) ? response.tickets : [];
+        setTickets(ticketData.map((ticket) => ({
+          ...ticket,
+          id: String(ticket._id || ticket.id),
+          projectId: String(ticket.project?._id || ticket.project?.id || ticket.project || ""),
+        })));
+      })
+      .catch(() => setTickets([]));
   }, []);
 
   const filteredProjects = useMemo(() => {
@@ -70,7 +97,7 @@ export default function MyProjects() {
       const matchesStatus =
         filter === "All" || project.status === filter;
 
-      const projectId = String(project._id ?? project.id ?? "");
+      const projectId = String(project.id ?? project._id ?? "");
 
       const matchesProject =
         !initialProject || projectId === initialProject;

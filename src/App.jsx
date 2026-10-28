@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
 // Landing and Authentication Pages
 import LandingPage from "./pages/LandingPage";
@@ -36,6 +37,20 @@ import AssignedTickets from "./pages/developer/AssignedTickets";
 import DeveloperTicketDetails from "./pages/developer/TicketDetails";
 import DeveloperProfile from "./pages/developer/DeveloperProfile";
 
+function RequireAuth({ roles, children }) {
+  const { isAuthenticated, role } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to={roles?.includes("admin") ? "/admin/login" : "/login"} replace />;
+  }
+
+  if (roles && !roles.includes(role)) {
+    return <Navigate to={`/${role}`} replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -43,9 +58,10 @@ export default function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/admin/login" element={<LoginPage adminOnly />} />
 
       {/* Client Routes */}
-      <Route path="/client" element={<ClientLayout />}>
+      <Route path="/client" element={<RequireAuth roles={["client"]}><ClientLayout /></RequireAuth>}>
         <Route index element={<Dashboard />} />
         <Route path="projects" element={<MyProjects />} />
         <Route path="create-project" element={<CreateProject />} />
@@ -56,7 +72,7 @@ export default function App() {
       </Route>
 
       {/* Admin Routes */}
-      <Route path="/admin" element={<AdminLayout />}>
+      <Route path="/admin" element={<RequireAuth roles={["admin"]}><AdminLayout /></RequireAuth>}>
         <Route index element={<AdminDashboard />} />
         <Route path="tickets" element={<AllTickets />} />
         <Route path="tickets/:ticketId" element={<AdminTicketDetails />} />
@@ -64,15 +80,15 @@ export default function App() {
         <Route path="projects" element={<ManageProjects />} />
         <Route path="clients" element={<ManageClients />} />
         <Route path="developers" element={<ManageDevelopers />} />
-        <Route path="/admin/activity" element={<ActivityLog />} />
-        <Route path="/admin/notifications" element={<AdminNotifications />} />
-        <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route path="activity" element={<ActivityLog />} />
+        <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="settings" element={<AdminSettings />} />
         <Route path="/admin/tickets/:ticketId" element={<TicketDetailsAdmin />} />
         
       </Route>
 
       {/* Developer Routes */}
-      <Route path="/developer" element={<DeveloperLayout />}>
+      <Route path="/developer" element={<RequireAuth roles={["developer"]}><DeveloperLayout /></RequireAuth>}>
         <Route index element={<DeveloperDashboard />} />
         <Route path="tickets" element={<AssignedTickets />} />
         <Route path="tickets/:ticketId" element={<DeveloperTicketDetails />} />

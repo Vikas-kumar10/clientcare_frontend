@@ -28,6 +28,11 @@ export const assignDeveloper = async (ticketId, developerId) => {
   return response.data;
 };
 
+export const reviewTicket = async (ticketId, reviewData) => {
+  const response = await api.patch(`/tickets/${ticketId}/review`, reviewData);
+  return response.data;
+};
+
 // Developer updates ticket status
 export const updateTicketStatus = async (
   ticketId,

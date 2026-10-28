@@ -1,4 +1,5 @@
 
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -13,7 +14,8 @@ import {
   Ticket as TicketIcon,
   UserRound,
 } from "lucide-react";
-import { tickets } from "../../data/mockData";
+import { getTicketById } from "../../api/ticketApi";
+import { getTicketActivities } from "../../api/activityApi";
 import {
   PageHeader,
   PriorityBadge,
@@ -23,7 +25,102 @@ import { DeveloperCard } from "../../components/ClientComponent/TicketComponents
 
 export default function TicketDetails() {
   const { ticketId } = useParams();
-  const ticket = tickets.find((item) => item.id === ticketId);
+  const [ticket, setTicket] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchTicket = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await getTicketById(ticketId);
+      const source = response?.ticket;
+      if (!source) throw new Error("Ticket details were not returned by the server.");
+
+      let activities = [];
+      try {
+        const activityResponse = await getTicketActivities(ticketId);
+        activities = activityResponse.activities || [];
+      } catch {
+        // Ticket details remain available even when the activity log is empty/unavailable.
+      }
+
+      const timeline = [
+        {
+          title: "Ticket created",
+          date: source.createdAt,
+          description: "Your support request was submitted.",
+          completed: true,
+        },
+        ...activities.map((item) => ({
+          title: item.action || "Ticket update",
+          date: item.createdAt,
+          description: item.description,
+          completed: true,
+        })),
+      ];
+
+      if (source.status !== "Open" && source.status !== "Assigned") {
+        timeline.push({
+          title: `Status: ${source.status}`,
+          date: source.resolvedAt || source.updatedAt,
+          description: source.resolution || "The support team updated this ticket.",
+          completed: true,
+        });
+      }
+
+      timeline.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+
+      const assignedDeveloper = source.assignedDeveloper;
+      setTicket({
+        ...source,
+        id: String(source._id || source.id),
+        projectId: source.project?._id || source.project?.id || source.project || "",
+        projectName: source.project?.name || source.projectName || "Unknown project",
+        category: source.category || "Support request",
+        createdAt: source.createdAt
+          ? new Date(source.createdAt).toLocaleDateString("en-IN")
+          : "Date unavailable",
+        updatedAt: source.updatedAt
+          ? new Date(source.updatedAt).toLocaleDateString("en-IN")
+          : "Date unavailable",
+        assignedTo: assignedDeveloper
+          ? {
+              ...assignedDeveloper,
+              id: assignedDeveloper._id || assignedDeveloper.id,
+              role: "Developer",
+              initials: (assignedDeveloper.name || "Developer")
+                .split(/\s+/)
+                .filter(Boolean)
+                .map((part) => part[0]?.toUpperCase())
+                .join("")
+                .slice(0, 2),
+            }
+          : null,
+        timeline,
+      });
+    } catch (err) {
+      setTicket(null);
+      setError(
+        err.response?.data?.message || err.message || "Unable to load this ticket."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId]);
+
+  useEffect(() => {
+    fetchTicket();
+  }, [fetchTicket]);
+
+  if (loading) {
+    return (
+      <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500">
+        Loading ticket details...
+      </div>
+    );
+  }
 
   if (!ticket) {
     return (
@@ -33,7 +130,7 @@ export default function TicketDetails() {
           Ticket not found
         </h1>
         <p className="mt-2 text-sm text-stone-500">
-          This ticket ID is not available in the static demo data.
+          {error || "This ticket could not be found or you do not have access."}
         </p>
         <Link
           to="/client/tickets"
@@ -41,6 +138,13 @@ export default function TicketDetails() {
         >
           <ArrowLeft size={16} /> Back to tickets
         </Link>
+        <button
+          type="button"
+          onClick={fetchTicket}
+          className="mt-4 block w-full text-sm font-semibold text-orange-800 underline"
+        >
+          Try again
+        </button>
       </div>
     );
   }

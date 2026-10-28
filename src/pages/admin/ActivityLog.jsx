@@ -17,8 +17,10 @@ import { PageHeader } from "../../components/ClientComponent/UI";
 
 function normalizeActivity(response) {
   if (Array.isArray(response)) return response;
+  if (Array.isArray(response?.activities)) return response.activities;
   if (Array.isArray(response?.activity)) return response.activity;
   if (Array.isArray(response?.data)) return response.data;
+  if (Array.isArray(response?.data?.activities)) return response.data.activities;
   if (Array.isArray(response?.data?.activity)) return response.data.activity;
   return [];
 }

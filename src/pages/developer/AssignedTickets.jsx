@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   Search,
@@ -9,10 +9,11 @@ import {
   X,
 } from "lucide-react";
 
-import { getAssignedTickets } from "../../data/developerData";
+import { getTickets } from "../../api/ticketApi";
 
 const statusStyles = {
   Open: "bg-amber-50 text-amber-700",
+  Assigned: "bg-sky-50 text-sky-700",
   "In Progress": "bg-orange-50 text-orange-700",
   Resolved: "bg-emerald-50 text-emerald-700",
   Closed: "bg-stone-100 text-stone-600",
@@ -20,6 +21,7 @@ const statusStyles = {
 
 const priorityStyles = {
   High: "bg-rose-50 text-rose-700",
+  Critical: "bg-red-100 text-red-800",
   Medium: "bg-amber-50 text-amber-700",
   Low: "bg-stone-100 text-stone-600",
 };
@@ -27,12 +29,43 @@ const priorityStyles = {
 export default function AssignedTickets() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [tickets, setTickets] = useState(() => getAssignedTickets());
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState(
     searchParams.get("priority") || "All"
   );
+
+  const fetchTickets = useCallback(async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await getTickets();
+      const ticketList = Array.isArray(response?.tickets)
+        ? response.tickets
+        : Array.isArray(response)
+          ? response
+          : [];
+
+      setTickets(ticketList.map((ticket) => ({
+        ...ticket,
+        id: ticket._id || ticket.id,
+        projectName: ticket.project?.name || ticket.projectName || "Unknown project",
+        clientName: ticket.client?.name || ticket.clientName || "Unknown client",
+      })));
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to load assigned tickets.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
   const filteredTickets = useMemo(() => {
     return tickets.filter((ticket) => {
@@ -46,10 +79,6 @@ export default function AssignedTickets() {
       );
     });
   }, [tickets, search, statusFilter, priorityFilter]);
-
-  const refreshTickets = () => {
-    setTickets(getAssignedTickets());
-  };
 
   const clearFilters = () => {
     setSearch("");
@@ -77,10 +106,11 @@ export default function AssignedTickets() {
 
         <button
           type="button"
-          onClick={refreshTickets}
+          onClick={fetchTickets}
+          disabled={loading}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 hover:bg-stone-50"
         >
-          Refresh list
+          {loading ? "Loading..." : "Refresh list"}
         </button>
       </header>
 
@@ -93,7 +123,7 @@ export default function AssignedTickets() {
           },
           {
             label: "Open",
-            value: tickets.filter((t) => t.status === "Open").length,
+            value: tickets.filter((t) => t.status === "Open" || t.status === "Assigned").length,
           },
           {
             label: "In progress",
@@ -154,6 +184,7 @@ export default function AssignedTickets() {
             >
               <option value="All">All statuses</option>
               <option value="Open">Open</option>
+              <option value="Assigned">Assigned</option>
               <option value="In Progress">In Progress</option>
               <option value="Resolved">Resolved</option>
               <option value="Closed">Closed</option>
@@ -172,6 +203,7 @@ export default function AssignedTickets() {
             >
               <option value="All">All priorities</option>
               <option value="High">High</option>
+              <option value="Critical">Critical</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
@@ -198,7 +230,22 @@ export default function AssignedTickets() {
           )}
         </div>
 
-        {filteredTickets.length > 0 ? (
+        {loading ? (
+          <div className="p-10 text-center text-sm text-stone-500">
+            Loading assigned tickets...
+          </div>
+        ) : error ? (
+          <div role="alert" className="p-8 text-center">
+            <p className="text-sm text-red-700">{error}</p>
+            <button
+              type="button"
+              onClick={fetchTickets}
+              className="mt-3 text-sm font-semibold text-red-800 underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : filteredTickets.length > 0 ? (
           <div className="divide-y divide-stone-100">
             {filteredTickets.map((ticket) => (
               <article

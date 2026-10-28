@@ -1,7 +1,40 @@
 
-import { Bell, Menu, Search, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Menu, Search } from "lucide-react";
+import { getMyProfile } from "../../api/profileApi";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AdminTopbar({ onMenuClick }) {
+  const { user: sessionUser } = useAuth();
+  const [profile, setProfile] = useState(sessionUser);
+
+  useEffect(() => {
+    let active = true;
+
+    getMyProfile()
+      .then((response) => {
+        if (active && response?.user) setProfile(response.user);
+      })
+      .catch(() => {
+        // Keep the signed-in session profile visible if the request fails.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const name = profile?.name || "Admin";
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "A";
+  const roleLabel = profile?.role === "admin"
+    ? "Administrator"
+    : profile?.role || "Admin";
+
   return (
     <header className="sticky top-0 z-30 flex h-[76px] items-center justify-between gap-3 border-b border-stone-200 bg-white/95 px-4 backdrop-blur sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-3">
@@ -39,16 +72,15 @@ export default function AdminTopbar({ onMenuClick }) {
 
         <div className="h-8 w-px bg-stone-200" />
 
-        <button className="flex items-center gap-2 rounded-xl p-1.5 text-left hover:bg-stone-50">
+        <div className="flex items-center gap-2 rounded-xl p-1.5 text-left">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-800">
-            AD
+            {initials}
           </div>
           <div className="hidden sm:block">
-            <p className="text-sm font-semibold text-stone-800">Alex Morgan</p>
-            <p className="text-[11px] text-stone-500">Administrator</p>
+            <p className="max-w-40 truncate text-sm font-semibold text-stone-800">{name}</p>
+            <p className="text-[11px] capitalize text-stone-500">{roleLabel}</p>
           </div>
-          <ChevronDown size={15} className="hidden text-stone-400 sm:block" />
-        </button>
+        </div>
       </div>
     </header>
   );

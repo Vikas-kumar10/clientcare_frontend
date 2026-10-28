@@ -30,6 +30,10 @@ export default function ProjectList({
               ),
             ).length;
 
+            const resolvedTickets = projectTickets.filter((ticket) =>
+              ["Resolved", "Closed"].includes(ticket.status),
+            ).length;
+
             return (
               <ProjectCard
                 key={project.id}
@@ -37,6 +41,7 @@ export default function ProjectList({
                   ...project,
                   totalTickets,
                   openIssues,
+                  resolvedTickets,
                 }}
                 onEdit={onEdit}
                 onView={onView}

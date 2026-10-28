@@ -14,7 +14,7 @@ const bubbles = [
   { size: 32, left: "48%", top: "18%", duration: 9 },
 ];
 
-export default function LoginPage() {
+export default function LoginPage({ adminOnly = false }) {
   const reduceMotion = useReducedMotion();
 
   return (
@@ -69,7 +69,7 @@ export default function LoginPage() {
           className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-[24px] border border-white/80 bg-white/90 shadow-[0_20px_60px_-25px_rgba(68,42,24,0.20)] backdrop-blur-xl lg:grid-cols-2"
         >
           <LoginBrandCard />
-          <LoginFormCard />
+          <LoginFormCard requiredRole={adminOnly ? "admin" : null} />
         </motion.div>
       </main>
 

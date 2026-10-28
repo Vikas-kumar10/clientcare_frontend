@@ -4,13 +4,24 @@ import { SectionHeading, ProgressBar } from "./UI";
 
 export default function TicketOverview({
   tickets,
-  inProgressCount,
-  resolvedCount,
+  loading = false,
+  error = "",
+  onRetry,
 }) {
+  const openCount = tickets.filter((ticket) =>
+    ["Open", "Assigned"].includes(ticket.status),
+  ).length;
+  const inProgressCount = tickets.filter(
+    (ticket) => ticket.status === "In Progress",
+  ).length;
+  const resolvedCount = tickets.filter((ticket) =>
+    ["Resolved", "Closed"].includes(ticket.status),
+  ).length;
+
   const overview = [
     {
       label: "Open",
-      count: tickets.filter((ticket) => ticket.status === "Open").length,
+      count: openCount,
       color: "#C2410C",
     },
     {
@@ -30,12 +41,27 @@ export default function TicketOverview({
       <SectionHeading title="Ticket overview" />
 
       <div className="mt-5 space-y-5">
+        {loading && (
+          <p className="text-sm text-stone-500">Loading ticket overview...</p>
+        )}
+        {!loading && error && (
+          <div role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+            <p>{error}</p>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mt-2 font-semibold underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
         {overview.map((item) => (
           <div key={item.label}>
             <div className="mb-2 flex items-center justify-between text-sm">
               <span className="text-stone-600">{item.label}</span>
               <span className="font-bold text-stone-900">
-                {item.count}
+                {loading ? "—" : item.count}
               </span>
             </div>
 

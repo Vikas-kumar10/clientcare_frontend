@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -15,12 +15,17 @@ import {
 } from "lucide-react";
 
 import {
-  getDeveloperTicketById,
-  updateDeveloperTicket,
-} from "../../data/developerData";
+  getTicketById,
+  updateTicketStatus,
+} from "../../api/ticketApi";
+import {
+  addTicketActivity,
+  getTicketActivities,
+} from "../../api/activityApi";
 
 const statusStyles = {
   Open: "bg-amber-50 text-amber-700",
+  Assigned: "bg-sky-50 text-sky-700",
   "In Progress": "bg-orange-50 text-orange-700",
   Resolved: "bg-emerald-50 text-emerald-700",
   Closed: "bg-stone-100 text-stone-600",
@@ -28,6 +33,7 @@ const statusStyles = {
 
 const priorityStyles = {
   High: "bg-rose-50 text-rose-700",
+  Critical: "bg-red-100 text-red-800",
   Medium: "bg-amber-50 text-amber-700",
   Low: "bg-stone-100 text-stone-600",
 };
@@ -35,27 +41,73 @@ const priorityStyles = {
 export default function TicketDetails() {
   const { ticketId } = useParams();
 
-  const [ticket, setTicket] = useState(() =>
-    getDeveloperTicketById(ticketId)
-  );
-
-  const [status, setStatus] = useState(ticket?.status || "Open");
-  const [resolutionNote, setResolutionNote] = useState(
-    ticket?.resolutionNote || ""
-  );
+  const [ticket, setTicket] = useState(null);
+  const [status, setStatus] = useState("Assigned");
+  const [resolutionNote, setResolutionNote] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activities, setActivities] = useState([]);
+  const [activityError, setActivityError] = useState("");
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const statusLabel = (value) => (value === "Resolved" ? "Complete" : value);
+
+  const fetchTicket = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    setActivityError("");
+
+    try {
+      const data = await getTicketById(ticketId);
+      const source = data?.ticket;
+      if (!source) throw new Error("Ticket was not returned by the server.");
+
+      const currentTicket = {
+        ...source,
+        id: source._id || source.id,
+        projectName: source.project?.name || source.projectName || "Unknown project",
+        clientName: source.client?.name || source.clientName || "Unknown client",
+        clientEmail: source.client?.email || source.clientEmail || "",
+        resolutionNote: source.resolution || source.resolutionNote || "",
+      };
+
+      setTicket(currentTicket);
+      setStatus(currentTicket.status);
+      setResolutionNote(currentTicket.resolutionNote);
+
+      try {
+        const activityData = await getTicketActivities(ticketId);
+        setActivities(activityData.activities || []);
+      } catch (err) {
+        setActivities([]);
+        setActivityError(
+          err.response?.data?.message || "Unable to load ticket activity."
+        );
+      }
+    } catch (err) {
+      setTicket(null);
+      setError(
+        err.response?.data?.message || err.message || "Unable to load this ticket."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [ticketId]);
 
   useEffect(() => {
-    const currentTicket = getDeveloperTicketById(ticketId);
-
-    setTicket(currentTicket);
-    setStatus(currentTicket?.status || "Open");
-    setResolutionNote(currentTicket?.resolutionNote || "");
     setMessage("");
-    setError("");
-  }, [ticketId]);
+    setComment("");
+    fetchTicket();
+  }, [fetchTicket]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-3xl rounded-2xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-500">
+        Loading ticket details...
+      </div>
+    );
+  }
 
   if (!ticket) {
     return (
@@ -67,7 +119,7 @@ export default function TicketDetails() {
         </h1>
 
         <p className="mt-2 text-sm text-stone-500">
-          This ticket does not exist or is not assigned to this developer.
+          {error || "This ticket does not exist or is not assigned to you."}
         </p>
 
         <Link
@@ -81,7 +133,7 @@ export default function TicketDetails() {
     );
   }
 
-  const handleSave = (event) => {
+  const handleSave = async (event) => {
     event.preventDefault();
     setMessage("");
     setError("");
@@ -98,31 +150,48 @@ export default function TicketDetails() {
       return;
     }
 
-    const updatedTicket = updateDeveloperTicket(ticket.id, {
-      status,
-      resolutionNote: resolutionNote.trim(),
-      comments: comment.trim()
-        ? [
-            ...(ticket.comments || []),
-            {
-              author: ticket.assignedToName,
-              message: comment.trim(),
-              date: new Date().toISOString().slice(0, 10),
-            },
-          ]
-        : ticket.comments || [],
-    });
-
-    if (!updatedTicket) {
-      setError("Unable to update this ticket.");
+    if (status === ticket.status && !comment.trim()) {
+      setError("Change the status or add an activity note before saving.");
       return;
     }
 
-    setTicket(updatedTicket);
-    setStatus(updatedTicket.status);
-    setResolutionNote(updatedTicket.resolutionNote || "");
-    setComment("");
-    setMessage("Ticket updated successfully in this demo.");
+    setSaving(true);
+    try {
+      let updatedTicket = ticket;
+      if (status !== ticket.status) {
+        const result = await updateTicketStatus(
+          ticket.id,
+          status,
+          resolutionNote.trim()
+        );
+        const source = result.ticket;
+        updatedTicket = {
+          ...source,
+          id: source._id || source.id,
+          projectName: source.project?.name || ticket.projectName,
+          clientName: source.client?.name || ticket.clientName,
+          clientEmail: source.client?.email || ticket.clientEmail,
+          resolutionNote: source.resolution || resolutionNote.trim(),
+        };
+        setTicket(updatedTicket);
+        setStatus(updatedTicket.status);
+        setResolutionNote(updatedTicket.resolutionNote || "");
+      }
+
+      if (comment.trim()) {
+        const result = await addTicketActivity(ticket.id, comment.trim());
+        if (result.activity) {
+          setActivities((items) => [result.activity, ...items]);
+        }
+        setComment("");
+      }
+
+      setMessage("Ticket updated successfully.");
+    } catch (err) {
+      setError(err.response?.data?.message || "Unable to update this ticket.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -167,7 +236,7 @@ export default function TicketDetails() {
                 statusStyles[ticket.status] || statusStyles.Open
               }`}
             >
-              {ticket.status}
+              {statusLabel(ticket.status)}
             </span>
           </div>
         </div>
@@ -243,7 +312,7 @@ export default function TicketDetails() {
                 <div>
                   <p className="text-xs text-stone-500">Current status</p>
                   <p className="mt-1 text-sm font-semibold text-stone-800">
-                    {ticket.status}
+                    {statusLabel(ticket.status)}
                   </p>
                 </div>
               </div>
@@ -286,31 +355,46 @@ export default function TicketDetails() {
               </div>
             </div>
 
-            {ticket.comments?.length ? (
+            {activityError && (
+              <p role="alert" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
+                {activityError}
+              </p>
+            )}
+
+            {activities.length ? (
               <div className="mt-5 space-y-4">
-                {ticket.comments.map((item, index) => (
-                  <div key={`${item.date}-${index}`} className="flex gap-3">
+                {activities.map((item) => {
+                  const author = item.actor?.name || item.action || "Activity";
+                  const initials = author
+                    .split(" ")
+                    .map((part) => part[0])
+                    .join("")
+                    .slice(0, 2);
+
+                  return (
+                  <div key={item._id} className="flex gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-bold text-stone-700">
-                      {item.author
-                        .split(" ")
-                        .map((part) => part[0])
-                        .join("")
-                        .slice(0, 2)}
+                      {initials}
                     </div>
 
                     <div className="min-w-0 flex-1 rounded-xl bg-stone-50 p-3">
                       <div className="flex flex-wrap justify-between gap-2">
                         <p className="text-sm font-semibold text-stone-800">
-                          {item.author}
+                          {author}
                         </p>
-                        <p className="text-xs text-stone-400">{item.date}</p>
+                        <p className="text-xs text-stone-400">
+                          {item.createdAt
+                            ? new Date(item.createdAt).toLocaleString("en-IN")
+                            : ""}
+                        </p>
                       </div>
                       <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-stone-600">
-                        {item.message}
+                        {item.description}
                       </p>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="mt-5 rounded-xl bg-stone-50 p-4 text-sm text-stone-500">
@@ -337,6 +421,7 @@ export default function TicketDetails() {
               Ticket status
               <select
                 value={status}
+                disabled={ticket.status === "Resolved" || ticket.status === "Closed" || saving}
                 onChange={(e) => {
                   setStatus(e.target.value);
                   setError("");
@@ -344,9 +429,21 @@ export default function TicketDetails() {
                 }}
                 className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-3 py-3 text-sm font-normal outline-none focus:border-orange-500"
               >
-                <option value="Open">Open</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Resolved">Resolved</option>
+                {ticket.status === "Assigned" && (
+                  <>
+                    <option value="Assigned">Assigned</option>
+                    <option value="In Progress">In Progress</option>
+                  </>
+                )}
+                {ticket.status === "In Progress" && (
+                  <>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Complete</option>
+                  </>
+                )}
+                {!["Assigned", "In Progress"].includes(ticket.status) && (
+                  <option value={ticket.status}>{ticket.status}</option>
+                )}
                 <option value="Closed" disabled>
                   Closed (client/admin confirmation)
                 </option>
@@ -375,6 +472,7 @@ export default function TicketDetails() {
               <textarea
                 rows={3}
                 value={comment}
+                maxLength={500}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Optional progress update..."
                 className="mt-2 w-full resize-y rounded-xl border border-stone-200 px-3 py-3 text-sm font-normal leading-6 outline-none focus:border-orange-500"
@@ -391,14 +489,15 @@ export default function TicketDetails() {
 
             <button
               type="submit"
-              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#C2410C] px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-800"
+              disabled={saving}
+              className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#C2410C] px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Save size={17} />
-              Save changes
+              {saving ? "Saving..." : "Save changes"}
             </button>
 
             <p className="mt-3 text-center text-xs leading-5 text-stone-400">
-              Demo changes are saved in this browser only.
+              Updates are saved to the ticket activity and backend.
             </p>
           </form>
         </aside>

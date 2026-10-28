@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   Ticket,
   CircleAlert,
+  CheckCircle2,
   FolderKanban,
 } from "lucide-react";
 
@@ -25,6 +26,7 @@ export default function ProjectCard({
 
   const totalTickets = project.totalTickets ?? 0;
   const openIssues = project.openIssues ?? 0;
+  const resolvedTickets = project.resolvedTickets ?? 0;
 
   return (
     <article className="group flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md">
@@ -126,6 +128,15 @@ export default function ProjectCard({
           </p>
         </div>
       </div>
+
+      {resolvedTickets > 0 && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm font-semibold text-emerald-800">
+          <CheckCircle2 size={17} aria-hidden="true" />
+          <span>
+            {resolvedTickets} resolved {resolvedTickets === 1 ? "ticket" : "tickets"}
+          </span>
+        </div>
+      )}
 
       {/* Optional progress */}
       {project.progress > 0 && (

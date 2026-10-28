@@ -11,8 +11,8 @@ import {
   CalendarDays,
   AlertTriangle,
 } from "lucide-react";
-import { users } from "../../data/mockData";
-import { getTicketById } from "../../api/ticketApi";
+import { getUsers } from "../../api/userApi";
+import { getTicketById, reviewTicket } from "../../api/ticketApi";
 import { PageHeader, StatusBadge, PriorityBadge } from "../../components/ClientComponent/UI";
 import { DeveloperCard } from "../../components/ClientComponent/TicketComponents";
 
@@ -26,6 +26,55 @@ export default function TicketDetailsAdmin() {
   const [priority, setPriority] = useState("Medium");
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState(false);
+  const [developers, setDevelopers] = useState([]);
+  const [developersLoading, setDevelopersLoading] = useState(true);
+  const [developersError, setDevelopersError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    const loadDevelopers = async () => {
+      setDevelopersLoading(true);
+      setDevelopersError("");
+
+      try {
+        const response = await getUsers({ role: "developer" });
+        const list = Array.isArray(response?.users) ? response.users : [];
+        if (active) {
+          setDevelopers(list.map((user) => {
+            const id = String(user._id || user.id);
+            return {
+              ...user,
+              id,
+              role: "Developer",
+              initials: (user.name || "Developer")
+                .split(" ")
+                .filter(Boolean)
+                .map((part) => part[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase(),
+            };
+          }));
+        }
+      } catch (error) {
+        if (active) {
+          setDevelopersError(
+            error.response?.data?.message || "Unable to load developers."
+          );
+        }
+      } finally {
+        if (active) setDevelopersLoading(false);
+      }
+    };
+
+    loadDevelopers();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -99,32 +148,51 @@ export default function TicketDetailsAdmin() {
     );
   }
 
-  const developers = users.filter(
-    (user) => user.role === "Developer" && user.status === "Active"
-  );
-
-  const selectedDeveloper = developers.find((user) => user.id === developerId);
-
-  const saveChanges = (event) => {
+  const saveChanges = async (event) => {
     event.preventDefault();
+    setSaving(true);
+    setSaveError("");
+    setSaved(false);
 
-    const assignedTo = selectedDeveloper
-      ? {
-          id: selectedDeveloper.id,
-          name: selectedDeveloper.name,
-          role: "Developer",
-          initials: selectedDeveloper.initials,
-        }
-      : null;
+    try {
+      const response = await reviewTicket(ticket.id, {
+        developerId: developerId || null,
+        status,
+        priority,
+      });
+      const updated = response.ticket;
+      const assignedDeveloper = updated.assignedDeveloper || null;
 
-    setTicket((current) => ({
-      ...current,
-      assignedTo,
-      status,
-      priority,
-    }));
-
-    setSaved(true);
+      setTicket((current) => ({
+        ...current,
+        ...updated,
+        id: String(updated._id || updated.id || current.id),
+        clientName: updated.client?.name || current.clientName,
+        projectName: updated.project?.name || current.projectName,
+        assignedTo: assignedDeveloper
+          ? {
+              ...assignedDeveloper,
+              id: String(assignedDeveloper._id || assignedDeveloper.id),
+              role: "Developer",
+              initials: (assignedDeveloper.name || "Developer")
+                .split(" ")
+                .filter(Boolean)
+                .map((part) => part[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase(),
+            }
+          : null,
+      }));
+      setDeveloperId(assignedDeveloper?._id || assignedDeveloper?.id || "");
+      setStatus(updated.status);
+      setPriority(updated.priority);
+      setSaved(true);
+    } catch (error) {
+      setSaveError(error.response?.data?.message || "Unable to save ticket assignment.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -147,11 +215,15 @@ export default function TicketDetailsAdmin() {
         <div className="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
           <CheckCircle2 size={19} className="shrink-0" />
           <div>
-            <p className="font-semibold">Demo changes applied</p>
-            <p className="mt-1 text-xs">
-              Changes are visible in this page only. Nothing has been saved to a database.
-            </p>
+            <p className="font-semibold">Ticket assignment saved</p>
+            <p className="mt-1 text-xs">The assigned developer will see this ticket in their workspace.</p>
           </div>
+        </div>
+      )}
+
+      {saveError && (
+        <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {saveError}
         </div>
       )}
 
@@ -191,6 +263,18 @@ export default function TicketDetailsAdmin() {
               </span>
             </div>
           </section>
+
+          {ticket.resolution && (
+            <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={19} className="text-emerald-700" />
+                <h2 className="font-bold text-emerald-900">Developer resolution</h2>
+              </div>
+              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-emerald-900">
+                {ticket.resolution}
+              </p>
+            </section>
+          )}
 
           <section className="rounded-2xl border border-stone-200 bg-white p-5 sm:p-6">
             <div className="flex items-center gap-3">
@@ -240,9 +324,17 @@ export default function TicketDetailsAdmin() {
             </label>
             <select
               value={developerId}
+              disabled={developersLoading || Boolean(developersError)}
               onChange={(e) => {
-                setDeveloperId(e.target.value);
+                const nextDeveloperId = e.target.value;
+                setDeveloperId(nextDeveloperId);
+                setStatus((current) => {
+                  if (nextDeveloperId && current === "Open") return "Assigned";
+                  if (!nextDeveloperId && current === "Assigned") return "Open";
+                  return current;
+                });
                 setSaved(false);
+                setSaveError("");
               }}
               className="mt-2 w-full rounded-xl border border-stone-200 bg-white px-3 py-3 text-sm outline-none focus:border-orange-500"
             >
@@ -253,6 +345,17 @@ export default function TicketDetailsAdmin() {
                 </option>
               ))}
             </select>
+            {developersLoading && (
+              <p className="mt-2 text-xs text-stone-500">Loading developers...</p>
+            )}
+            {developersError && (
+              <p role="alert" className="mt-2 text-xs text-red-700">
+                {developersError}
+              </p>
+            )}
+            {!developersLoading && !developersError && developers.length === 0 && (
+              <p className="mt-2 text-xs text-stone-500">No developer accounts found.</p>
+            )}
 
             <label className="mt-5 block text-sm font-semibold text-stone-700">
               Ticket status
@@ -286,14 +389,15 @@ export default function TicketDetailsAdmin() {
               <option>Low</option>
               <option>Medium</option>
               <option>High</option>
-              <option>Urgent</option>
+              <option>Critical</option>
             </select>
 
             <button
               type="submit"
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#C2410C] px-4 py-3 text-sm font-semibold text-white hover:bg-orange-800"
+              disabled={saving || developersLoading || Boolean(developersError)}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#C2410C] px-4 py-3 text-sm font-semibold text-white hover:bg-orange-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <CheckCircle2 size={17} /> Apply demo changes
+              <CheckCircle2 size={17} /> {saving ? "Saving..." : "Save changes"}
             </button>
           </form>
 

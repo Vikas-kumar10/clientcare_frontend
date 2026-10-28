@@ -12,10 +12,10 @@ import {
   Mail,
 } from "lucide-react";
 
-import { loginUser } from "../../api/authApi";
+import { loginAdmin, loginUser } from "../../api/authApi";
 import { useAuth } from "../../context/AuthContext";
 
-export default function LoginFormCard() {
+export default function LoginFormCard({ requiredRole = null }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -54,13 +54,19 @@ export default function LoginFormCard() {
       setLoading(true);
 
       // Call backend login API
-      const data = await loginUser({
+      const loginRequest = requiredRole === "admin" ? loginAdmin : loginUser;
+      const data = await loginRequest({
         email: formData.email.trim(),
         password: formData.password,
       });
 
       if (!data?.token || !data?.user) {
         throw new Error("Login response is missing account details.");
+      }
+
+      if (requiredRole && data.user.role !== requiredRole) {
+        setError("This login page is for administrators. Use an admin account.");
+        return;
       }
 
       login(data.user, data.token);

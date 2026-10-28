@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { UserRound, ShieldCheck } from "lucide-react";
 import { getMyProfile, updateMyProfile } from "../../api/profileApi";
 import DeveloperProfileForm from "../../components/DeveloperComponent/DeveloperProfileForm";
@@ -18,28 +18,34 @@ export default function DeveloperProfile() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getMyProfile();
-        const user = data.user;
+  const fetchProfile = useCallback(async () => {
+    setPageLoading(true);
+    setError("");
 
-        setProfile(user);
-        setFormData({
-          phone: user.phone || "",
-          company: user.company || "",
-          jobTitle: user.jobTitle || "",
-          bio: user.bio || "",
-        });
-      } catch (err) {
-        setError(err.response?.data?.message || "Unable to load your profile.");
-      } finally {
-        setPageLoading(false);
-      }
-    };
+    try {
+      const data = await getMyProfile();
+      if (!data?.user) throw new Error("Profile data was not returned by the server.");
 
-    fetchProfile();
+      const user = data.user;
+      setProfile(user);
+      setFormData({
+        phone: user.phone || "",
+        company: user.company || "",
+        jobTitle: user.jobTitle || "",
+        bio: user.bio || "",
+      });
+    } catch (err) {
+      setError(
+        err.response?.data?.message || err.message || "Unable to load your profile."
+      );
+    } finally {
+      setPageLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,6 +83,21 @@ export default function DeveloperProfile() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-orange-200 border-t-[#C2410C]" />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div role="alert" className="mx-auto max-w-3xl rounded-2xl border border-red-200 bg-red-50 p-6">
+        <p className="text-sm text-red-700">{error || "Profile could not be loaded."}</p>
+        <button
+          type="button"
+          onClick={fetchProfile}
+          className="mt-3 text-sm font-semibold text-red-800 underline"
+        >
+          Try again
+        </button>
       </div>
     );
   }
