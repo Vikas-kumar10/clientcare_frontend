@@ -1,8 +1,14 @@
 
 import axios from "axios";
 
+// Set VITE_API_URL in .env.local for a local backend or in the deploy
+// environment for a different API. The default points to the deployed API.
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || "https://clientcare-backend.onrender.com/api"
+).replace(/\/+$/, "");
+
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },

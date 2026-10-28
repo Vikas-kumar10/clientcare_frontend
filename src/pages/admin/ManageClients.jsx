@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, X, CheckCircle2, LoaderCircle, AlertCircle } from "lucide-react";
+import API from "../../api/axios";
 
 import { PageHeader } from "../../components/ClientComponent/UI";
 import ClientStats from "../../components/AdminComponent/ManageClientComponent/ClientStats";
@@ -15,10 +16,6 @@ const blankClient = {
   company: "",
   status: "Active",
 };
-
-// Change this endpoint if your backend uses a different route.
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-const CLIENTS_ENDPOINT = `${API_URL}/users`;
 
 function normalizeClient(user) {
   const name = user.name || user.fullName || "";
@@ -65,23 +62,8 @@ export default function ManageClients() {
     setError("");
 
     try {
-      const token = localStorage.getItem("token");
-
-      const response = await fetch(CLIENTS_ENDPOINT, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      const result = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(
-          result.message || result.error || "Unable to fetch clients."
-        );
-      }
+      const response = await API.get("/users");
+      const result = response.data;
 
       // Supports common API response shapes.
       const users = Array.isArray(result)
@@ -104,7 +86,12 @@ export default function ManageClients() {
 
       setClients(clientUsers);
     } catch (err) {
-      setError(err.message || "Something went wrong while fetching clients.");
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          "Something went wrong while fetching clients."
+      );
     } finally {
       setLoading(false);
     }
