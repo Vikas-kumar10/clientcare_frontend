@@ -12,8 +12,8 @@ import MyProjects from "./pages/client/MyProjects";
 import CreateTicket from "./pages/client/CreateTicket";
 import MyTickets from "./pages/client/MyTickets";
 import TicketDetails from "./pages/client/TicketDetails";
-import ClientProfile from "./pages/Client/ClientProfile";
-import CreateProject from "./pages/Client/CreateProject";
+import ClientProfile from "./pages/client/ClientProfile";
+import CreateProject from "./pages/client/CreateProject";
 
 // Admin Dashboard
 import AdminLayout from "./components/AdminComponent/AdminLayout";
@@ -34,7 +34,7 @@ import DeveloperLayout from "./components/DeveloperComponent/DeveloperLayout";
 import DeveloperDashboard from "./pages/developer/DeveloperDashboard";
 import AssignedTickets from "./pages/developer/AssignedTickets";
 import DeveloperTicketDetails from "./pages/developer/TicketDetails";
-import DeveloperProfile from "./pages/Developer/DeveloperProfile";
+import DeveloperProfile from "./pages/developer/DeveloperProfile";
 
 export default function App() {
   return (
