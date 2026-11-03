@@ -70,7 +70,6 @@
 //   );
 // }
 
-
 import { Link } from "react-router-dom";
 import { ArrowRight, Code2, Users } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
@@ -100,9 +99,7 @@ export default function SignupCta() {
   return (
     <section className="px-4 pb-16 sm:px-6 sm:pb-20 lg:px-8 lg:pb-24">
       <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl bg-[#292524] px-5 py-10 text-white sm:px-8 sm:py-14 lg:px-12 lg:py-16">
-
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-
           {/* CTA Content */}
           <div className="text-center lg:text-left">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-300 sm:text-sm">
@@ -120,70 +117,67 @@ export default function SignupCta() {
           </div>
 
           {/* Role Cards */}
-          
-{/* Role Cards */}
-<div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-  {roles.map((role, index) => {
-    const Icon = role.icon;
 
-    return (
-      <motion.div
-        key={role.link}
-        animate={
-          shouldReduceMotion ? { y: 0 } : { y: [0, -12, 0] }
-        }
-        transition={{
-          duration: 3.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: index * 0.7,
-        }}
-        whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
-        className="h-full min-w-0"
-      >
-        <Link
-          to={role.link}
-          className={`group relative flex h-full min-h-[230px] flex-col overflow-hidden rounded-2xl p-5 text-[#292524] shadow-lg transition-shadow duration-300 hover:shadow-2xl sm:p-6 ${role.cardBg}`}
-        >
-          {/* Background Icon */}
-          <Icon
-            size={150}
-            strokeWidth={1}
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-5 -bottom-7 rotate-[-15deg] text-[#C2410C]/[0.08] transition-all duration-500 group-hover:scale-110 group-hover:rotate-0 group-hover:text-[#C2410C]/[0.13]"
-          />
+          {/* Role Cards */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {roles.map((role, index) => {
+              const Icon = role.icon;
 
-          {/* Foreground Content */}
-          <div className="relative z-10 flex h-full flex-col">
-            <Icon
-              size={28}
-              strokeWidth={2}
-              className="text-[#C2410C] transition-transform duration-300 group-hover:scale-110"
-            />
+              return (
+                <motion.div
+                  key={role.link}
+                  animate={shouldReduceMotion ? { y: 0 } : { y: [0, -12, 0] }}
+                  transition={{
+                    duration: 3.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: index * 0.7,
+                  }}
+                  whileHover={shouldReduceMotion ? undefined : { scale: 1.03 }}
+                  className="h-full min-w-0"
+                >
+                  <Link
+                    to={role.link}
+                    className={`group relative flex h-full min-h-[230px] flex-col overflow-hidden rounded-2xl p-5 text-[#292524] shadow-lg transition-shadow duration-300 hover:shadow-2xl sm:p-6 ${role.cardBg}`}
+                  >
+                    {/* Background Icon */}
+                    <Icon
+                      size={150}
+                      strokeWidth={1}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute -right-5 -bottom-7 rotate-[-15deg] text-[#C2410C]/[0.08] transition-all duration-500 group-hover:scale-110 group-hover:rotate-0 group-hover:text-[#C2410C]/[0.13]"
+                    />
 
-            <h3 className="mt-4 text-lg font-bold sm:text-xl">
-              {role.title}
-            </h3>
+                    {/* Foreground Content */}
+                    <div className="relative z-10 flex h-full flex-col">
+                      <Icon
+                        size={28}
+                        strokeWidth={2}
+                        className="text-[#C2410C] transition-transform duration-300 group-hover:scale-110"
+                      />
 
-            <p className="mt-2 flex-1 text-sm leading-6 text-stone-600">
-              {role.description}
-            </p>
+                      <h3 className="mt-4 text-lg font-bold sm:text-xl">
+                        {role.title}
+                      </h3>
 
-            <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#C2410C]">
-              {role.linkText}
+                      <p className="mt-2 flex-1 text-sm leading-6 text-stone-600">
+                        {role.description}
+                      </p>
 
-              <ArrowRight
-                size={16}
-                className="transition-transform duration-300 group-hover:translate-x-1"
-              />
-            </span>
+                      <span className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-[#C2410C]">
+                        {role.linkText}
+
+                        <ArrowRight
+                          size={16}
+                          className="transition-transform duration-300 group-hover:translate-x-1"
+                        />
+                      </span>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
-        </Link>
-      </motion.div>
-    );
-  })}
-</div>
-
         </div>
       </div>
     </section>
