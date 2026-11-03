@@ -128,9 +128,7 @@ export default function RotatingCards() {
           </span>
         </motion.h1>
 
-        <p className="mt-3 text-sm sm:text-base text-stone-500 max-w-xl mx-auto">
-          Everything your support team needs, connected in one simple platform.
-        </p>
+        
       </div>
 
       {/* Animation Area */}
