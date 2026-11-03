@@ -73,101 +73,127 @@ const tabletPositions = [
 ];
 
 const mobilePositions = [
-  { x: -105, y: -125 },
-  { x: 0, y: -220 },
-  { x: 105, y: -125 },
-  { x: 105, y: 125 },
-  { x: 0, y: 220 },
-  { x: -105, y: 125 },
+  { x: -90, y: -115 },
+  { x: 0, y: -205 },
+  { x: 90, y: -115 },
+  { x: 90, y: 115 },
+  { x: 0, y: 205 },
+  { x: -90, y: 115 },
 ];
 
 export default function RotatingCards() {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <section className="min-h-[100svh] overflow-hidden bg-[#FAF7F2] flex flex-col items-center justify-center px-3 py-8 sm:px-5 sm:py-10">
+    <section className="w-full overflow-hidden bg-[#FAF7F2] px-4 py-14 sm:px-6 sm:py-16 lg:py-20">
 
       {/* Heading */}
-      <div className="w-full max-w-[760px] text-left mb-5 sm:mb-8">
-        <span className="text-xs sm:text-sm font-semibold uppercase tracking-[0.25em] text-[#C2410C]">
+      <div className="mx-auto mb-8 w-full max-w-3xl text-center sm:mb-12">
+
+        <span className="inline-block text-xs font-semibold uppercase tracking-[0.25em] text-[#C2410C] sm:text-sm">
           Why ClientCare
         </span>
 
         <motion.h1
-          className="mt-2 whitespace-nowrap text-[clamp(1rem,5vw,3rem)] font-bold tracking-tight text-[#292524]"
-          initial={shouldReduceMotion ? { opacity: 1, x: 0 } : { opacity: 0, x: -32 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-3 text-2xl font-bold leading-tight tracking-tight text-[#292524] sm:text-3xl md:text-4xl lg:text-5xl"
+          initial={
+            shouldReduceMotion
+              ? { opacity: 1, y: 0 }
+              : { opacity: 0, y: 25 }
+          }
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 0.8,
+            ease: [0.22, 1, 0.36, 1],
+          }}
         >
-          Complete Support <span className="text-[#C2410C]">Management Platform</span>
+          Complete Support
+          <span className="block text-[#C2410C]">
+            Management Platform
+          </span>
         </motion.h1>
+
       </div>
 
       {/* Animation Area */}
-      <div className="relative w-full max-w-[760px] h-[470px] sm:h-[540px] md:h-[570px] flex items-center justify-center">
+      <div className="relative mx-auto flex h-[450px] w-full max-w-[760px] items-center justify-center sm:h-[520px] md:h-[570px]">
 
         {/* Center Circle */}
-        <div className="absolute z-20 w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-[#C2410C] shadow-xl shadow-orange-900/20 flex flex-col items-center justify-center">
-          <span className="text-white font-bold text-xl md:text-2xl">
+        <div className="absolute z-20 flex h-16 w-16 flex-col items-center justify-center rounded-full bg-[#C2410C] shadow-xl shadow-orange-900/20 sm:h-24 sm:w-24 md:h-28 md:w-28">
+
+          <span className="text-xl font-bold text-white sm:text-2xl">
             CC
           </span>
 
-          <span className="text-orange-100 text-[8px] md:text-[9px] font-semibold tracking-widest">
+          <span className="text-[7px] font-semibold tracking-widest text-orange-100 sm:text-[9px]">
             CLIENTCARE
           </span>
+
         </div>
 
         {/* Cards */}
         {cards.map((card, index) => {
           const Icon = card.icon;
 
-          const position = {
-            x: desktopPositions[index].x,
-            y: desktopPositions[index].y,
-          };
-
+          const desktop = desktopPositions[index];
           const tablet = tabletPositions[index];
           const mobile = mobilePositions[index];
 
           return (
             <motion.div
               key={card.number}
-              className="absolute z-10 w-[105px] h-[120px] sm:w-[150px] sm:h-[145px] md:w-[185px] md:h-[165px] rounded-xl sm:rounded-2xl bg-white border border-orange-100 shadow-lg p-2 sm:p-4 md:p-5 flex flex-col justify-center items-center text-center"
+              className="
+                absolute z-10
+                flex h-[105px] w-[105px]
+                flex-col items-center justify-center
+                rounded-xl border border-orange-100
+                bg-white p-2 text-center shadow-lg
+
+                sm:h-[145px] sm:w-[150px] sm:rounded-2xl sm:p-4
+                md:h-[165px] md:w-[185px] md:p-5
+              "
               initial={
                 shouldReduceMotion
                   ? {
-                      x: position.x,
-                      y: position.y,
+                      x: desktop.x,
+                      y: desktop.y,
                       opacity: 1,
                       scale: 1,
                     }
                   : {
-                      x: -300,
-                      y: 250,
+                      x: 0,
+                      y: 0,
                       opacity: 0,
                       scale: 0.5,
                     }
               }
-              animate={{
-                x: [
-                  -300,
-                  -260,
-                  -180,
-                  -100,
-                  0,
-                  position.x,
-                ],
-                y: [
-                  250,
-                  100,
-                  -100,
-                  -220,
-                  -100,
-                  position.y,
-                ],
-                opacity: 1,
-                scale: 1,
-              }}
+              animate={
+                shouldReduceMotion
+                  ? {
+                      x: desktop.x,
+                      y: desktop.y,
+                      opacity: 1,
+                      scale: 1,
+                    }
+                  : {
+                      x: [
+                        0,
+                        -100,
+                        -180,
+                        -100,
+                        desktop.x,
+                      ],
+                      y: [
+                        0,
+                        100,
+                        -100,
+                        -220,
+                        desktop.y,
+                      ],
+                      opacity: 1,
+                      scale: 1,
+                    }
+              }
               transition={{
                 duration: shouldReduceMotion ? 0 : 1.8,
                 delay: shouldReduceMotion ? 0 : index * 0.2,
@@ -179,42 +205,69 @@ export default function RotatingCards() {
                 boxShadow: "0px 15px 35px rgba(194,65,12,0.18)",
               }}
               style={{
-                "--desktop-x": `${position.x}px`,
-                "--desktop-y": `${position.y}px`,
+                "--desktop-x": `${desktop.x}px`,
+                "--desktop-y": `${desktop.y}px`,
                 "--tablet-x": `${tablet.x}px`,
                 "--tablet-y": `${tablet.y}px`,
                 "--mobile-x": `${mobile.x}px`,
                 "--mobile-y": `${mobile.y}px`,
               }}
             >
+
               {/* Icon */}
-              <div className="w-7 h-7 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-orange-50 flex items-center justify-center text-[#C2410C] mb-1.5 sm:mb-2">
-                <Icon size={20} className="sm:w-6 sm:h-6" />
+              <div className="mb-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-orange-50 text-[#C2410C] sm:mb-2 sm:h-10 sm:w-10 md:h-12 md:w-12">
+
+                <Icon size={19} className="sm:h-6 sm:w-6" />
+
               </div>
 
               {/* Number */}
-              <span className="text-[9px] sm:text-[10px] font-bold text-[#C2410C] mb-1">
+              <span className="mb-1 text-[9px] font-bold text-[#C2410C] sm:text-[10px]">
                 {card.number}
               </span>
 
               {/* Title */}
-              <h3 className="text-[10px] sm:text-xs md:text-sm font-bold text-[#292524] leading-tight">
+              <h3 className="text-[10px] font-bold leading-tight text-[#292524] sm:text-xs md:text-sm">
                 {card.title}
               </h3>
 
               {/* Description */}
-              <p className="hidden md:block text-[10px] text-stone-500 mt-2 leading-relaxed">
+              <p className="mt-2 hidden text-[10px] leading-relaxed text-stone-500 md:block">
                 {card.description}
               </p>
+
             </motion.div>
           );
         })}
+
+        {/* Responsive card positions */}
+        <style>{`
+          @media (max-width: 639px) {
+            .relative > div[style*="--desktop-x"] {
+              transform: translate(
+                var(--mobile-x),
+                var(--mobile-y)
+              );
+            }
+          }
+
+          @media (min-width: 640px) and (max-width: 767px) {
+            .relative > div[style*="--desktop-x"] {
+              transform: translate(
+                var(--tablet-x),
+                var(--tablet-y)
+              );
+            }
+          }
+        `}</style>
+
       </div>
 
       {/* Footer */}
-      <p className="mt-2 text-[10px] sm:text-xs text-stone-500 text-center">
+      <p className="mx-auto mt-5 max-w-xl px-2 text-center text-xs font-medium leading-relaxed text-stone-500 sm:mt-8 sm:text-sm">
         One platform. Three roles. Complete support management.
       </p>
+
     </section>
   );
 }
