@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   FolderKanban,
   Ticket,
+  MessageCircle,
   PlusCircle,
   Headset,
   ChevronRight,
@@ -16,6 +17,7 @@ const links = [
 
   { label: "Create Ticket", to: "/client/create-ticket", icon: PlusCircle },
   { label: "My Tickets", to: "/client/tickets", icon: Ticket },
+  { label: "Chat with Admin", to: "/client/chat", icon: MessageCircle },
 ];
 
 export default function Sidebar({ open, onClose }) {

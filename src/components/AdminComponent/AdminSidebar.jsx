@@ -15,6 +15,7 @@ import {
   Bell,
   Settings,
   LogOut,
+  MessageSquareText,
 } from "lucide-react";
 
 const sections = [
@@ -36,6 +37,11 @@ const sections = [
         label: "All Tickets",
         to: "/admin/tickets",
         icon: Ticket,
+      },
+      {
+        label: "Conversations",
+        to: "/admin/conversations",
+        icon: MessageSquareText,
       },
       {
         label: "Manage Projects",

@@ -4,7 +4,9 @@ import {
   Clock3,
   LoaderCircle,
   CheckCircle2,
+  MessageCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 import { getTickets } from "../../api/ticketApi";
 
@@ -92,6 +94,15 @@ export default function DeveloperDashboard() {
   return (
     <div className="mx-auto max-w-7xl space-y-7">
       <DeveloperWelcome name={developer.name || "Developer"} />
+
+      <div className="-mt-3 flex justify-end">
+        <Link
+          to="/developer/chat"
+          className="inline-flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-700 transition hover:border-orange-300 hover:text-orange-800"
+        >
+          <MessageCircle size={17} /> Chat with Admin
+        </Link>
+      </div>
 
       {loading ? (
         <div className="rounded-2xl border border-stone-200 bg-white p-8 text-center text-sm text-stone-600">

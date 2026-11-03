@@ -12,6 +12,7 @@ import {
   UserRound,
   LogOut,
   ChevronDown,
+  MessageCircle,
 } from "lucide-react";
 
 const links = [
@@ -25,6 +26,11 @@ const links = [
     label: "Assigned Tickets",
     to: "/developer/tickets",
     icon: Ticket,
+  },
+  {
+    label: "Chat with Admin",
+    to: "/developer/chat",
+    icon: MessageCircle,
   },
 ];
 

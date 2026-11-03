@@ -49,7 +49,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Ticket } from "lucide-react";
+import { MessageCircle, Ticket } from "lucide-react";
 
 import { getTickets } from "../../api/ticketApi";
 import api from "../../api/axios";
@@ -118,13 +118,22 @@ export default function AdminDashboard() {
         title="Admin Dashboard"
         description="Monitor client issues, assign developers and keep support work moving."
         action={
-          <Link
-            to="/admin/tickets"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#C2410C] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#9A3412]"
-          >
-            <Ticket size={17} />
-            Review tickets
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/admin/conversations"
+              className="inline-flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-semibold text-stone-700 transition hover:border-orange-300 hover:text-orange-800"
+            >
+              <MessageCircle size={17} />
+              Conversations
+            </Link>
+            <Link
+              to="/admin/tickets"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#C2410C] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#9A3412]"
+            >
+              <Ticket size={17} />
+              Review tickets
+            </Link>
+          </div>
         }
       />
 

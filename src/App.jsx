@@ -15,6 +15,7 @@ import MyTickets from "./pages/client/MyTickets";
 import TicketDetails from "./pages/client/TicketDetails";
 import ClientProfile from "./pages/client/ClientProfile";
 import CreateProject from "./pages/client/CreateProject";
+import ChatWithAdmin from "./pages/client/ChatWithAdmin";
 
 // Admin Dashboard
 import AdminLayout from "./components/AdminComponent/AdminLayout";
@@ -29,6 +30,7 @@ import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
 import ProjectDetails from "./pages/admin/ProjectDetails";
 import TicketDetailsAdmin from "./pages/admin/TicketDetailsAdmin";
+import AdminConversations from "./pages/admin/AdminConversations";
 
 // Developer Dashboard
 import DeveloperLayout from "./components/DeveloperComponent/DeveloperLayout";
@@ -36,6 +38,7 @@ import DeveloperDashboard from "./pages/developer/DeveloperDashboard";
 import AssignedTickets from "./pages/developer/AssignedTickets";
 import DeveloperTicketDetails from "./pages/developer/TicketDetails";
 import DeveloperProfile from "./pages/developer/DeveloperProfile";
+import DeveloperChatWithAdmin from "./pages/developer/ChatWithAdmin";
 
 function RequireAuth({ roles, children }) {
   const { isAuthenticated, role } = useAuth();
@@ -68,6 +71,7 @@ export default function App() {
         <Route path="create-ticket" element={<CreateTicket />} />
         <Route path="tickets" element={<MyTickets />} />
         <Route path="tickets/:ticketId" element={<TicketDetails />} />
+        <Route path="chat" element={<ChatWithAdmin />} />
         <Route path="/client/profile" element={<ClientProfile />} />
       </Route>
 
@@ -76,6 +80,7 @@ export default function App() {
         <Route index element={<AdminDashboard />} />
         <Route path="tickets" element={<AllTickets />} />
         <Route path="tickets/:ticketId" element={<AdminTicketDetails />} />
+        <Route path="conversations" element={<AdminConversations />} />
         <Route path="projects/:projectId" element={<ProjectDetails />} />
         <Route path="projects" element={<ManageProjects />} />
         <Route path="clients" element={<ManageClients />} />
@@ -92,6 +97,7 @@ export default function App() {
         <Route index element={<DeveloperDashboard />} />
         <Route path="tickets" element={<AssignedTickets />} />
         <Route path="tickets/:ticketId" element={<DeveloperTicketDetails />} />
+        <Route path="chat" element={<DeveloperChatWithAdmin />} />
         <Route path="profile" element={<DeveloperProfile />} />
       </Route>
 
