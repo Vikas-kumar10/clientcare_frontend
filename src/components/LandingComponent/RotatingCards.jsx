@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import {
   Ticket,
@@ -54,17 +55,56 @@ const cards = [
   },
 ];
 
-// Responsive orbit radius
-const orbitSizes = {
-  mobile: { x: 112, y: 145 },
-  tablet: { x: 175, y: 190 },
-  desktop: { x: 220, y: 220 },
-};
-
 export default function RotatingCards() {
   const shouldReduceMotion = useReducedMotion();
 
-  const radius = orbitSizes.desktop;
+  const [screenWidth, setScreenWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1024
+  );
+
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Responsive orbit radius
+  const radiusX =
+    screenWidth < 480
+      ? Math.max(85, Math.min(110, (screenWidth - 150) / 2))
+      : screenWidth < 768
+        ? 145
+        : screenWidth < 1024
+          ? 185
+          : 220;
+
+  const radiusY =
+    screenWidth < 480
+      ? 125
+      : screenWidth < 768
+        ? 165
+        : screenWidth < 1024
+          ? 195
+          : 220;
+
+  const cardWidth =
+    screenWidth < 480 ? 100 : screenWidth < 768 ? 135 : 175;
+
+  const cardHeight =
+    screenWidth < 480 ? 110 : screenWidth < 768 ? 130 : 160;
+
+  const animationSize =
+    screenWidth < 480
+      ? "h-[340px]"
+      : screenWidth < 768
+        ? "h-[430px]"
+        : screenWidth < 1024
+          ? "h-[500px]"
+          : "h-[560px]";
 
   return (
     <section className="w-full min-h-screen overflow-hidden bg-[#FAF7F2] flex flex-col items-center justify-center px-4 py-12 sm:px-6">
@@ -72,7 +112,7 @@ export default function RotatingCards() {
       {/* Heading */}
       <div className="w-full max-w-4xl text-center mb-8 sm:mb-12">
 
-        <span className="inline-block text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-[#C2410C]">
+        <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-[#C2410C]">
           Why ClientCare
         </span>
 
@@ -94,90 +134,64 @@ export default function RotatingCards() {
       </div>
 
       {/* Animation Area */}
-      <div className="relative w-full max-w-[850px] h-[390px] sm:h-[480px] md:h-[550px] flex items-center justify-center">
+      <div
+        className={`relative w-full max-w-[850px] ${animationSize} flex items-center justify-center`}
+      >
 
-        {/* Orbit rotation */}
+        {/* Orbit Border */}
+        <div
+          className="absolute rounded-full border border-dashed border-orange-200"
+          style={{
+            width: radiusX * 2 + 30,
+            height: radiusY * 2 + 30,
+          }}
+        />
+
+        {/* Rotating Cards */}
         <motion.div
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0"
           animate={
             shouldReduceMotion
               ? { rotate: 0 }
               : { rotate: 360 }
           }
-          transition={
-            shouldReduceMotion
-              ? { duration: 0 }
-              : {
-                  duration: 35,
-                  ease: "linear",
-                  repeat: Infinity,
-                }
-          }
+          transition={{
+            duration: shouldReduceMotion ? 0 : 35,
+            ease: "linear",
+            repeat: shouldReduceMotion ? 0 : Infinity,
+          }}
         >
-
-          {/* Orbit Circle */}
-          <div className="absolute w-[230px] h-[290px] sm:w-[350px] sm:h-[380px] md:w-[440px] md:h-[440px] rounded-full border border-dashed border-orange-200" />
-
-          {/* Cards */}
           {cards.map((card, index) => {
             const Icon = card.icon;
 
-            const angle = index * 60 - 90;
+            const angle = (index * 360) / cards.length - 90;
+
             const radians = (angle * Math.PI) / 180;
 
-            const positions = {
-              mobile: {
-                x: Math.cos(radians) * orbitSizes.mobile.x,
-                y: Math.sin(radians) * orbitSizes.mobile.y,
-              },
-              tablet: {
-                x: Math.cos(radians) * orbitSizes.tablet.x,
-                y: Math.sin(radians) * orbitSizes.tablet.y,
-              },
-              desktop: {
-                x: Math.cos(radians) * radius.x,
-                y: Math.sin(radians) * radius.y,
-              },
-            };
+            const x = Math.cos(radians) * radiusX;
+            const y = Math.sin(radians) * radiusY;
 
             return (
               <motion.div
                 key={card.number}
-                className="
-                  absolute
-                  w-[108px] h-[112px]
-                  sm:w-[145px] sm:h-[140px]
-                  md:w-[180px] md:h-[165px]
-                  rounded-xl sm:rounded-2xl
-                  bg-white
-                  border border-orange-100
-                  shadow-lg
-                  p-2 sm:p-3 md:p-5
-                  flex flex-col items-center justify-center
-                  text-center
-                "
+                className="absolute rounded-xl sm:rounded-2xl bg-white border border-orange-100 shadow-lg p-2 sm:p-3 md:p-4 flex flex-col items-center justify-center text-center"
                 style={{
+                  width: cardWidth,
+                  height: cardHeight,
                   left: "50%",
                   top: "50%",
-                  x: "-50%",
-                  y: "-50%",
-                  marginLeft: positions.desktop.x,
-                  marginTop: positions.desktop.y,
+                  marginLeft: x,
+                  marginTop: y,
+                  translateX: "-50%",
+                  translateY: "-50%",
                 }}
-                animate={
-                  shouldReduceMotion
-                    ? {
-                        x: "-50%",
-                        y: "-50%",
-                      }
-                    : undefined
-                }
                 whileHover={{
                   scale: 1.06,
                   borderColor: "#C2410C",
+                  boxShadow: "0px 15px 35px rgba(194,65,12,0.18)",
                 }}
               >
-                <div className="w-7 h-7 sm:w-9 sm:h-9 md:w-11 md:h-11 rounded-lg bg-orange-50 flex items-center justify-center text-[#C2410C] mb-1.5 sm:mb-2">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-orange-50 flex items-center justify-center text-[#C2410C] mb-2">
                   <Icon size={20} />
                 </div>
 
@@ -198,7 +212,7 @@ export default function RotatingCards() {
         </motion.div>
 
         {/* Fixed Center Logo */}
-        <div className="absolute z-20 w-[72px] h-[72px] sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-[#C2410C] shadow-xl shadow-orange-900/20 flex flex-col items-center justify-center border-4 border-[#FAF7F2]">
+        <div className="absolute z-20 w-[68px] h-[68px] sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full bg-[#C2410C] shadow-xl shadow-orange-900/20 flex flex-col items-center justify-center border-4 border-[#FAF7F2]">
 
           <span className="text-white font-bold text-xl sm:text-2xl md:text-3xl">
             CC
@@ -208,6 +222,7 @@ export default function RotatingCards() {
             CLIENTCARE
           </span>
         </div>
+
       </div>
 
       {/* Footer */}
