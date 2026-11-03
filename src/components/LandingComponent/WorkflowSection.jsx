@@ -23,7 +23,7 @@ export default function WorkflowSection() {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <section className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
+    <section className="relative overflow-hidden pt-16 pb-8 sm:pt-20 sm:pb-10 lg:pt-24 lg:pb-12">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
 
         {/* Heading */}

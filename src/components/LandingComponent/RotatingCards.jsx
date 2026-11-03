@@ -107,7 +107,7 @@ export default function RotatingCards() {
           : "h-[560px]";
 
   return (
-    <section className="w-full min-h-screen overflow-hidden bg-[#FAF7F2] flex flex-col items-center justify-center px-4 py-12 sm:px-6">
+    <section className="w-full overflow-hidden bg-[#FAF7F2] flex flex-col items-center justify-center px-4 py-6 sm:px-6 sm:py-8">
 
       {/* Heading */}
       <div className="w-full max-w-4xl text-center mb-8 sm:mb-12">
