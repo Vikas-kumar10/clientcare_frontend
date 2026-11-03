@@ -23,23 +23,18 @@
 /*--------------- */
 import API from "./axios.js";
 
-// Get chat messages
-const getMessages = async (ticketId, chatType, params = {}) => {
+export const getMessages = async (ticketId, chatType) => {
   const response = await API.get(
     `/chat/tickets/${ticketId}/messages`,
     {
-      params: {
-        ...params,
-        chatType,
-      },
+      params: { chatType },
     }
   );
 
   return response.data;
 };
 
-// Send chat message
-const sendMessage = async (ticketId, chatType, text) => {
+export const sendMessage = async (ticketId, chatType, text) => {
   const response = await API.post(
     `/chat/tickets/${ticketId}/messages`,
     {
@@ -50,5 +45,3 @@ const sendMessage = async (ticketId, chatType, text) => {
 
   return response.data;
 };
-
-export { getMessages, sendMessage };
