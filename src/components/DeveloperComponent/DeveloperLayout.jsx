@@ -14,6 +14,7 @@ export default function DeveloperLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [notificationsError, setNotificationsError] = useState("");
+  const [notificationsPollingPaused, setNotificationsPollingPaused] = useState(false);
 
   const fetchNotifications = useCallback(async () => {
     setNotificationsError("");
@@ -22,6 +23,7 @@ export default function DeveloperLayout() {
       setNotifications(response.notifications || []);
       setUnreadCount(response.unreadCount || 0);
     } catch (error) {
+      setNotificationsPollingPaused(true);
       setNotificationsError(
         error.response?.data?.message || "Unable to load notifications.",
       );
@@ -31,10 +33,11 @@ export default function DeveloperLayout() {
   }, []);
 
   useEffect(() => {
+    if (notificationsPollingPaused) return undefined;
     fetchNotifications();
     const intervalId = window.setInterval(fetchNotifications, 30000);
     return () => window.clearInterval(intervalId);
-  }, [fetchNotifications]);
+  }, [fetchNotifications, notificationsPollingPaused]);
 
   const markRead = async (notification) => {
     if (notification.read) return;
@@ -109,7 +112,12 @@ export default function DeveloperLayout() {
                 onClick={() => {
                   const willOpen = !notificationsOpen;
                   setNotificationsOpen(willOpen);
-                  if (willOpen) fetchNotifications();
+                  if (willOpen && notificationsPollingPaused) {
+                    setNotificationsLoading(true);
+                    setNotificationsPollingPaused(false);
+                  } else if (willOpen) {
+                    fetchNotifications();
+                  }
                 }}
                 className="relative rounded-xl border border-stone-200 p-2.5 text-stone-600 transition hover:bg-stone-50"
               >
@@ -143,7 +151,10 @@ export default function DeveloperLayout() {
                         </p>
                         <button
                           type="button"
-                          onClick={fetchNotifications}
+                          onClick={() => {
+                            setNotificationsLoading(true);
+                            setNotificationsPollingPaused(false);
+                          }}
                           className="mt-2 text-xs font-semibold text-red-800 underline"
                         >
                           Try again

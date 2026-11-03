@@ -21,6 +21,7 @@ export default function ChatWithAdmin() {
   const [loadingTickets, setLoadingTickets] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [pollingPaused, setPollingPaused] = useState(false);
   const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
 
@@ -55,6 +56,7 @@ export default function ChatWithAdmin() {
       setMessages(response.messages || []);
       setError("");
     } catch (requestError) {
+      setPollingPaused(true);
       setError(requestError.response?.data?.message || "Could not load this conversation.");
     } finally {
       if (showLoading) setLoadingMessages(false);
@@ -66,11 +68,12 @@ export default function ChatWithAdmin() {
       setMessages([]);
       return undefined;
     }
+    if (pollingPaused) return undefined;
 
     fetchMessages(true);
     const intervalId = window.setInterval(() => fetchMessages(), 5000);
     return () => window.clearInterval(intervalId);
-  }, [ticketId, fetchMessages]);
+  }, [ticketId, fetchMessages, pollingPaused]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -152,7 +155,7 @@ export default function ChatWithAdmin() {
           <div role="alert" className="flex items-center justify-between gap-3 border-b border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-700">
             <span>{error}</span>
             {ticketId && (
-              <button type="button" onClick={() => fetchMessages(true)} className="inline-flex shrink-0 items-center gap-1 font-semibold hover:underline">
+              <button type="button" onClick={() => setPollingPaused(false)} className="inline-flex shrink-0 items-center gap-1 font-semibold hover:underline">
                 <RefreshCw size={14} /> Retry
               </button>
             )}
