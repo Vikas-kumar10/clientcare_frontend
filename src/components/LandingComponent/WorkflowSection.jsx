@@ -19,66 +19,67 @@ const steps = [
   },
 ];
 
-const clockwiseAnimation = {
-  x: [0, 0, 35, 35, 0],
-  y: [0, -25, -25, 25, 0],
-};
-
 export default function WorkflowSection() {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <section className="overflow-hidden py-20 sm:py-24">
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
+    <section className="relative overflow-hidden py-16 sm:py-20 lg:py-24">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
 
-        <div className="text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#C2410C]">
+        {/* Heading */}
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#C2410C] sm:text-sm">
             How it works
           </p>
 
-          <h2 className="mt-4 text-3xl font-extrabold sm:text-4xl">
+          <h2 className="mt-3 text-2xl font-extrabold leading-tight text-stone-900 sm:text-3xl md:text-4xl">
             From issue to resolution
           </h2>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
+        {/* Workflow Cards */}
+        <div className="mt-10 grid grid-cols-1 items-stretch gap-5 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+
           {steps.map((step, index) => (
             <motion.article
               key={step.number}
               animate={
                 shouldReduceMotion
                   ? { x: 0, y: 0 }
-                  : clockwiseAnimation
+                  : {
+                      x: [0, 0, 18, 18, 0],
+                      y: [0, -18, -18, 18, 0],
+                    }
               }
               transition={{
-                duration: 5,
+                duration: 6,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: index * 0.6,
+                delay: index * 0.7,
                 times: [0, 0.25, 0.5, 0.75, 1],
               }}
               whileHover={
                 shouldReduceMotion
                   ? undefined
-                  : { scale: 1.03 }
+                  : { scale: 1.02 }
               }
-              className="relative rounded-3xl border border-stone-200 bg-white p-7 shadow-sm transition-shadow hover:shadow-xl"
+              className="flex h-full min-w-0 flex-col rounded-2xl border border-stone-200 bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-lg sm:rounded-3xl sm:p-7"
             >
-              <span className="text-4xl font-extrabold text-orange-200">
+              <span className="text-3xl font-extrabold text-orange-200 sm:text-4xl">
                 {step.number}
               </span>
 
-              <h3 className="mt-5 text-xl font-bold text-stone-900">
+              <h3 className="mt-4 break-words text-lg font-bold leading-snug text-stone-900 sm:mt-5 sm:text-xl">
                 {step.title}
               </h3>
 
-              <p className="mt-3 leading-7 text-stone-600">
+              <p className="mt-2 text-sm leading-6 text-stone-600 sm:mt-3 sm:text-base sm:leading-7">
                 {step.description}
               </p>
             </motion.article>
           ))}
-        </div>
 
+        </div>
       </div>
     </section>
   );
