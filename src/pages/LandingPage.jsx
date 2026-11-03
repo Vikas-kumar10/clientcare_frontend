@@ -4,6 +4,7 @@ import HeroSection from "../components/LandingComponent/HeroSection";
 import FeaturesSection from "../components/LandingComponent/FeaturesSection.jsx";
 import WorkflowSection from "../components/LandingComponent/WorkflowSection";
 import SignupCta from "../components/LandingComponent/SignupCta";
+import RotatingCards from "../components/LandingComponent/RotatingCards.jsx";
 
 export default function LandingPage() {
   return (
@@ -14,6 +15,7 @@ export default function LandingPage() {
         <HeroSection />
         <FeaturesSection />
         <WorkflowSection />
+        <RotatingCards/>
         <SignupCta />
       </main>
 
